@@ -1,0 +1,37 @@
+{
+  "name": "disposable-email-benchmark",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Benchmark framework for evaluating temporary/disposable email providers for automated QA verification",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20 <24"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:watch": "vitest",
+    "bench": "tsx src/cli/bench.ts",
+    "capabilities": "tsx src/cli/capabilities.ts",
+    "report": "tsx src/cli/report.ts"
+  },
+  "dependencies": {
+    "nodemailer": "^10.1.1",
+    "smtp-server": "^3.13.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.0",
+    "@types/nodemailer": "^8.0.2",
+    "@types/smtp-server": "^3.5.10",
+    "eslint": "^9.17.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^4.1.11"
+  }
+}

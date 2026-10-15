@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# The deterministic suites (unit + integration) require NO provider credentials
+# and NO outbound SMTP. They run everywhere. Real provider runs are a separate,
+# opt-in job because they need a relay and provider credentials.
+jobs:
+  verify:
+    name: Typecheck, lint and deterministic tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Node 22 LTS, per the discovery report (A-07/T-R7).
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck (TypeScript strict)
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit and integration tests
+        # These use loopback SMTP and a simulated transport only.
+        run: npm test
+
+      - name: Verify the reporting pipeline end-to-end
+        # Proves the harness produces JSON, CSV and HTML without external access.
+        env:
+          EBM_TRANSPORT: loopback
+          EBM_DETECTION_TIMEOUT_MS: '3000'
+          EBM_POLL_INTERVAL_MS: '500'
+        run: |
+          npm run bench -- --providers=maildrop --samples=1 --out=runs --label=ci-smoke
+          test -f runs/benchmark-ci-smoke.json
+          test -f runs/benchmark-ci-smoke-samples.csv
+          test -f runs/benchmark-ci-smoke.html
+
+      - name: Upload benchmark artefacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-smoke-artifacts
+          path: runs/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Secret scan
+        # Guard against credentials leaking into logs, artefacts or reports.
+        run: |
+          if grep -rInE '(EBM_MAILINATOR_TOKEN|EBM_RELAY_PASS)=[^[:space:]]+' runs/ 2>/dev/null; then
+            echo "::error::A credential value was written into run artefacts"
+            exit 1
+          fi
+          echo "No credential values found in artefacts."
+
+  # ---------------------------------------------------------------------------
+  # Opt-in real provider run. Requires repository secrets and a working SMTP
+  # transport. It never runs on pull requests (and therefore never on forks).
+  # ---------------------------------------------------------------------------
+  real-provider-run:
+    name: Real provider run (manual, requires credentials)
+    if: github.event_name == 'workflow_dispatch' && vars.ENABLE_REAL_RUN == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: verify
+    env:
+      EBM_TRANSPORT: ${{ vars.EBM_TRANSPORT || 'relay' }}
+      EBM_RELAY_HOST: ${{ secrets.EBM_RELAY_HOST }}
+      EBM_RELAY_PORT: ${{ secrets.EBM_RELAY_PORT }}
+      EBM_RELAY_USER: ${{ secrets.EBM_RELAY_USER }}
+      EBM_RELAY_PASS: ${{ secrets.EBM_RELAY_PASS }}
+      EBM_MAILINATOR_TOKEN: ${{ secrets.EBM_MAILINATOR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Run the benchmark against live providers
+        run: npm run bench -- --samples=5 --out=runs --label=ci-real
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-real-artifacts
+          path: runs/
+          retention-days: 14

@@ -1,0 +1,762 @@
+Email Provider Benchmark Framework
+Prompt 2: Technical Discovery, Feasibility Validation & Implementation
+1. Role
+
+Act as a Senior SDET, QA Architect, TypeScript Engineer, and technical lead responsible for implementing an email provider benchmark framework.
+
+Your responsibility is to validate technical feasibility, inspect the existing repository, verify external provider capabilities, design the architecture, implement the solution incrementally, and produce evidence-based benchmark results.
+
+The approved business requirements and benchmark methodology are the source of truth for business expectations.
+
+Do not silently change the methodology or acceptance criteria. If a requirement is infeasible, unsupported, unsafe, or technically misleading, document the issue and propose a justified alternative.
+
+2. Business and Technical Context
+
+The framework evaluates the following temporary email providers:
+
+10 Minute Mail
+Maildrop
+Guerrilla Mail
+Mailinator
+YOPmail
+
+The intended stack is:
+
+Playwright Test.
+TypeScript with strict mode.
+Compatible Node.js LTS.
+A local SMTP server managed by the framework.
+An SMTP client.
+HTTP clients for authorized provider APIs.
+Unit and integration tests.
+Local and CI/CD execution.
+HTML, JSON, and CSV reporting.
+
+The framework must send synthetic email messages through SMTP and measure when those messages become detectable and readable through each provider's supported UI or API.
+
+Do not assume that every provider offers an official API or permits automated access.
+
+3. Source-of-Truth Requirements
+
+Before implementation, locate and review the approved business analysis package.
+
+Extract:
+
+Functional requirements.
+Non-functional requirements.
+Acceptance criteria.
+Metric definitions.
+Statistical methodology.
+Provider capability requirements.
+Reporting requirements.
+Security requirements.
+Open questions.
+Explicit constraints.
+
+Create a requirements traceability matrix linking each requirement to:
+
+Implementation component.
+Verification method.
+Automated tests.
+Evidence.
+Status.
+Outstanding limitations.
+
+If the business analysis package is unavailable, create a clearly labeled provisional specification based on the project brief. Do not present unapproved assumptions as approved requirements.
+
+4. Phase 1 — Repository Discovery
+
+Before changing files:
+
+Inspect the repository structure.
+Inspect package manifests and lockfiles.
+Review existing Playwright configuration.
+Review TypeScript configuration.
+Identify existing test conventions.
+Identify reusable utilities and dependencies.
+Review existing CI/CD workflows.
+Identify coding standards and linting rules.
+Identify current logging and reporting mechanisms.
+Determine whether any required infrastructure already exists.
+
+Do not recreate existing functionality without a reason.
+
+Do not overwrite files or dependencies unnecessarily.
+
+Present a concise repository assessment before making major changes.
+
+5. Phase 1 — Provider Feasibility Validation
+
+Investigate the five providers individually before implementing their adapters.
+
+Use official provider documentation and other authoritative sources.
+
+For each provider, verify and document:
+
+Official website and supported domains.
+Address creation and retrieval workflow.
+Whether programmatic access is documented and authorized.
+Whether a public or officially documented API exists.
+API authentication requirements.
+Required subscription or plan.
+API rate limits.
+Message retrieval methods.
+Availability of subject and body.
+Availability of HTML and plain-text content.
+Available message identifiers and metadata.
+Inbox refresh behavior.
+Address and message expiration.
+UI automation restrictions.
+Terms of service.
+Known technical limitations.
+
+Record the source, verification date, and evidence supporting each finding.
+
+Do not invent API endpoints or use undocumented private endpoints.
+
+Do not reverse engineer internal APIs or bypass CAPTCHA, authentication, rate limits, or anti-abuse controls.
+
+Do not assume a public inbox is safe for sensitive information.
+
+Classify each capability using:
+
+SUPPORTED
+NOT_SUPPORTED
+CONFIGURATION_REQUIRED
+TEMPORARILY_UNAVAILABLE
+BLOCKED_BY_PROVIDER
+NOT_TESTED
+
+Distinguish a documented absence of support from a capability that has not been investigated.
+
+A provider may support UI testing but not authorized API testing. Represent that difference accurately.
+
+If current documentation is inconclusive, mark the capability as NOT_TESTED or otherwise accurately qualify it. Do not fabricate certainty.
+
+6. Technical Feasibility Gate
+
+Before implementing provider adapters, produce a capability matrix containing:
+
+Provider	UI access	Authorized UI automation	Official API	API configuration	Content access	Constraints
+
+Populate this matrix only with evidence-backed findings.
+
+Identify:
+
+Providers ready for implementation.
+Providers requiring credentials or configuration.
+Providers that support UI but not API.
+Providers blocked by policy or technical restrictions.
+Requirements that cannot be met as written.
+Dependencies that require stakeholder decisions.
+
+Do not force all providers into feature parity.
+
+Proceed with a proof of concept for a provider with an authorized and technically feasible workflow.
+
+If a required feature is blocked, implement the documented capability status and a clear explanation rather than a fake adapter.
+
+7. Technology and Dependency Validation
+
+Evaluate candidate dependencies before adding them.
+
+Consider:
+
+Maintenance status.
+License.
+Security posture.
+Compatibility with the current Node.js version.
+TypeScript support.
+Documentation.
+Testability.
+Operational complexity.
+
+Use a mature local SMTP server library, such as smtp-server, when appropriate.
+
+Use a suitable SMTP client, such as Nodemailer, when appropriate.
+
+Use Playwright for UI automation and an appropriate HTTP client for APIs.
+
+Do not add unnecessary infrastructure or dependencies.
+
+Document the rationale for major technical choices.
+
+8. Local SMTP Implementation
+
+Implement a local SMTP server managed by the framework lifecycle.
+
+The server must:
+
+Start before benchmark execution.
+Bind to loopback by default.
+Accept synthetic test messages.
+Record SMTP acceptance timestamps.
+Record SMTP responses and errors.
+Capture sender, recipient, subject, Message-ID, and correlation identifiers.
+Preserve required sample metadata.
+Support configurable ports and timeouts.
+Detect port conflicts.
+Close connections and listeners cleanly.
+Stop after execution, including when tests fail.
+Avoid orphaned processes.
+
+The server must not directly inject messages into provider inboxes.
+
+Do not confuse local SMTP acceptance with successful external delivery.
+
+Validate the server's behavior with integration tests.
+
+9. SMTP Transport Validation
+
+Determine whether direct outbound SMTP is technically possible in the target environment.
+
+Investigate relevant restrictions, including:
+
+Outbound port 25.
+DNS and MX resolution.
+Network egress policies.
+ISP restrictions.
+Sender identity requirements.
+Recipient rejection behavior.
+CI/CD network limitations.
+
+Implement clear transport error classification.
+
+If a relay is needed, support it as a separate, explicitly configured transport mode.
+
+Record the selected transport mode in every run.
+
+Do not combine direct SMTP and relay results without labeling the distinction.
+
+Do not silently fall back to a different transport after failure.
+
+Do not claim external delivery when only local SMTP acceptance has been confirmed.
+
+10. Message Generation and Correlation
+
+Generate synthetic messages with:
+
+Unique Message-ID.
+Unique run identifier.
+Unique sample identifier.
+Unique correlation marker.
+Expected subject.
+Plain-text body.
+HTML body when applicable.
+Synthetic sender.
+Provider recipient address.
+UTC reference timestamp.
+
+Persist expected content before sending.
+
+Implement configurable scenarios for:
+
+ASCII content.
+UTF-8 and accented characters.
+Long subjects and bodies.
+HTML content.
+Similar messages with distinct identifiers.
+
+Ensure that older messages cannot accidentally satisfy a new test.
+
+Do not use the subject as the only message identifier.
+
+11. Architecture
+
+Use a modular architecture that separates:
+
+SMTP transport.
+Provider adapters.
+UI automation.
+API clients.
+Message validation.
+Benchmark orchestration.
+Metrics and statistics.
+Reporting.
+Configuration.
+Logging and observability.
+
+Create a shared typed contract for provider capabilities and operations.
+
+Possible operations include:
+
+checkCapabilities()
+createOrResolveInbox()
+getInboxAddress()
+waitForMessage()
+listMessages()
+getMessage()
+readMessageViaUI()
+readMessageViaAPI()
+getProviderMetadata()
+
+Adapt the contract to actual provider capabilities.
+
+Use typed result objects, explicit capability states, structured errors, and timestamps.
+
+Avoid unnecessary inheritance and oversized interfaces.
+
+Prefer small, independently testable components.
+
+12. UI Automation
+
+For each provider with authorized UI automation:
+
+Open the provider website.
+Obtain or create an inbox using the supported workflow.
+Record relevant inbox metadata.
+Send a synthetic message through SMTP.
+Record the SMTP acceptance timestamp.
+Poll the inbox using a configurable strategy.
+Identify the correct message.
+Open the message.
+Extract subject and body.
+Record first detection.
+Record content availability.
+Validate the content.
+Save diagnostic evidence on failure.
+
+Use resilient Playwright locators and explicit assertions.
+
+Avoid fixed sleeps as the main synchronization mechanism.
+
+Respect provider restrictions and request limits.
+
+Measure page loading, inbox refresh, message detection, message opening, and content availability separately.
+
+Do not treat initial page load time as message delivery latency.
+
+Capture screenshots and traces on failure, using configurable retention and sanitization.
+
+13. API Integration
+
+For each provider with a documented, authorized API:
+
+Configure credentials securely when required.
+Obtain the inbox address.
+Send a message through SMTP.
+Query the documented inbox API.
+Identify the correct message.
+Retrieve the content.
+Validate subject, body, and available metadata.
+Record request duration and status.
+Record retries, timeouts, and rate limits.
+Stop polling when the message is found or the configured timeout is reached.
+
+Measure separately:
+
+HTTP request duration.
+Time to first message detection.
+Time to complete content availability.
+
+Do not use a provider's sending API to bypass the SMTP delivery path.
+
+Do not infer message delivery from HTTP success alone.
+
+Do not log credentials, tokens, cookies, or sensitive headers.
+
+If an API requires unavailable credentials or a subscription, report CONFIGURATION_REQUIRED and skip only the affected capability.
+
+Do not replace a missing real integration with a mock while labeling the result as real.
+
+14. Content Validation
+
+Implement strict and normalized validation modes.
+
+Validate available fields, including:
+
+Subject.
+Plain-text body.
+HTML body.
+Correlation marker.
+Encoding.
+Recipient.
+Message-ID.
+Correct sample identity.
+
+Strict mode must preserve exact differences.
+
+Normalized mode must apply explicit, configurable transformations.
+
+Record the comparison mode and transformations used.
+
+Preserve original content for auditability, subject to data retention and sanitization policies.
+
+Classify errors, including:
+
+SMTP_SEND_FAILED
+MESSAGE_NOT_DETECTED
+MESSAGE_CONTENT_UNAVAILABLE
+SUBJECT_MISMATCH
+BODY_MISMATCH
+ENCODING_MISMATCH
+WRONG_MESSAGE_MATCHED
+UI_AUTOMATION_FAILED
+API_REQUEST_FAILED
+PROVIDER_RATE_LIMITED
+PROVIDER_UNAVAILABLE
+CONFIGURATION_ERROR
+TEST_INFRASTRUCTURE_ERROR
+
+Ensure that infrastructure failures are not automatically attributed to providers.
+
+15. Timing and Observability
+
+Implement these timestamp definitions:
+
+SMTP_ACCEPTED_AT
+UI_FIRST_DETECTED_AT
+UI_CONTENT_AVAILABLE_AT
+API_FIRST_DETECTED_AT
+API_CONTENT_AVAILABLE_AT
+
+Calculate applicable derived metrics:
+
+UI detection latency.
+UI content latency.
+API detection latency.
+API content latency.
+UI content access duration.
+API content access duration.
+
+Use monotonic clocks for elapsed-time measurement within a process whenever possible.
+
+Use UTC timestamps for audit records and correlation.
+
+Record:
+
+Polling intervals.
+Number of polling attempts.
+Request durations.
+Last negative poll.
+First positive poll.
+Timeout configuration.
+Retry count.
+Transport mode.
+Environment metadata.
+
+Explain that observed detection latency is affected by polling and does not establish the provider's exact internal delivery timestamp.
+
+Do not fabricate timestamps when a message is not detected.
+
+Represent unavailable measurements as null or an explicit state.
+
+16. Statistical Implementation
+
+Implement the approved business analysis methodology.
+
+Support configurable:
+
+Sample count.
+Number of runs.
+Polling intervals.
+Timeouts.
+Concurrency.
+Retry limits.
+Execution order.
+Execution windows.
+
+Calculate, when statistically appropriate:
+
+Sample counts.
+Detection rates.
+Content validation rates.
+Timeout rates.
+Mean latency.
+Median latency.
+P90.
+P95.
+P99 when the sample size supports meaningful interpretation.
+API response time.
+Failure distributions.
+Variability across runs.
+
+Record the denominator for every percentage.
+
+Keep failed SMTP attempts, provider failures, infrastructure failures, and timeouts distinguishable.
+
+Do not silently exclude failed samples.
+
+Do not calculate percentiles from fabricated values or treat timeout-censored samples as fully observed latencies.
+
+Document inclusion and exclusion rules.
+
+Where appropriate, implement confidence intervals for rates and meaningful comparisons.
+
+Keep latency rankings separate from reliability rankings.
+
+Do not declare a winner when the evidence is insufficient.
+
+17. UI/API Comparability
+
+Implement UI and API benchmarking as separate channels.
+
+Prefer independent, equivalent samples for each channel when practical.
+
+Avoid unintentional caching and observation-order bias.
+
+Record any differences in polling intervals, authentication, access methods, or cache behavior.
+
+Do not compare HTTP request duration directly against end-to-end UI detection latency.
+
+Do not assume identical metadata availability across channels.
+
+Report unsupported channels without treating them as failed delivery attempts.
+
+18. Data Model and Persistence
+
+Each sample should contain at least:
+
+run_id
+sample_id
+provider
+channel
+inbox_identifier
+message_id
+correlation_id
+smtp_accepted_at
+ui_first_detected_at
+ui_content_available_at
+api_first_detected_at
+api_content_available_at
+smtp_status
+content_validation_status
+request_count
+retry_count
+polling_interval
+timeout_status
+failure_category
+Sanitized error details
+Framework version
+Configuration version
+Environment metadata
+
+Select a suitable storage approach based on the existing repository and reporting requirements.
+
+Preserve raw sample-level evidence needed to reproduce aggregate calculations.
+
+Use explicit nulls or status fields for unavailable measurements.
+
+19. Reporting
+
+Implement the reporting requirements defined in the approved business analysis package.
+
+At minimum, support:
+
+HTML report.
+JSON export.
+CSV export.
+Provider capability matrix.
+Provider comparison.
+UI/API comparison.
+Latency distributions.
+Reliability metrics.
+Failure categories.
+Timeout reporting.
+Sample-level details.
+Execution history.
+Configuration and environment metadata.
+Known limitations.
+Comparability warnings.
+
+Clearly distinguish real, simulated, and unexecuted samples.
+
+Do not generate rankings for unsupported or untested capabilities.
+
+Keep individual metrics visible even if a configurable composite score is implemented.
+
+20. Security and Responsible Use
+Use synthetic data.
+Do not expose the local SMTP server publicly.
+Store credentials in environment variables or CI/CD secret storage.
+Never log secrets.
+Sanitize diagnostic evidence.
+Respect provider terms and request limits.
+Do not bypass authentication or anti-abuse mechanisms.
+Apply configurable retention to messages, screenshots, and traces.
+Document cleanup behavior.
+21. Testing Strategy
+
+Implement unit tests for:
+
+Metric calculations.
+Percentile calculations.
+Failure classification.
+Content validation.
+Timeout handling.
+Duplicate message handling.
+Incomplete API responses.
+Result serialization.
+Report generation.
+
+Implement integration tests for:
+
+Local SMTP startup and shutdown.
+SMTP message acceptance.
+Message metadata extraction.
+Correlation identifiers.
+Transport errors.
+Configuration validation.
+Result persistence.
+
+Implement provider-independent tests using mocks or fixtures.
+
+Clearly label simulated test results.
+
+Implement real provider tests only when access is authorized and configuration is available.
+
+Keep external provider tests separate from deterministic unit and integration suites.
+
+22. Suggested Project Structure
+
+Adapt to the existing repository, but consider:
+
+src/smtp/
+src/providers/
+src/providers/mailinator/
+src/providers/maildrop/
+src/providers/guerrillamail/
+src/providers/yopmail/
+src/providers/tenminutemail/
+src/benchmark/
+src/validation/
+src/metrics/
+src/reporting/
+src/config/
+src/observability/
+tests/unit/
+tests/integration/
+tests/e2e/
+reports/
+docs/
+
+Do not create empty adapter implementations merely to match this directory structure.
+
+23. Implementation Phases
+Phase 1 — Discovery and Validation
+Inspect the repository.
+Review the approved business requirements.
+Validate provider capabilities.
+Validate SMTP feasibility.
+Review dependency options.
+Build the requirements traceability matrix.
+Document technical risks.
+Propose the architecture and implementation plan.
+
+Deliver the discovery report before major implementation.
+
+Phase 2 — Local Infrastructure
+Implement the SMTP server lifecycle.
+Implement message generation.
+Implement correlation and timestamp collection.
+Implement configuration and error classification.
+Implement unit and integration tests.
+Phase 3 — Proof of Concept
+
+Select one provider with a documented, authorized, technically feasible workflow.
+
+Implement:
+
+SMTP → send → detect → retrieve content → validate → measure → report.
+
+Validate the entire flow before implementing the remaining adapters.
+
+Phase 4 — Provider Adapters
+
+Implement each provider according to its verified capabilities.
+
+Record unsupported features explicitly.
+
+Do not fake API support.
+
+Phase 5 — Statistics and Reporting
+
+Implement the approved metrics, statistical analysis, exports, and reporting.
+
+Phase 6 — Hardening and Documentation
+
+Validate lifecycle cleanup, error handling, security, reproducibility, and CI/CD behavior.
+
+Document setup, configuration, limitations, metric interpretation, and how to add a provider.
+
+24. Acceptance Criteria and Traceability
+
+Map every approved requirement to:
+
+Code component.
+Automated test.
+Evidence.
+Execution status.
+Known limitations.
+
+Do not mark a requirement complete solely because a class or interface exists.
+
+Require executable evidence for implementation claims.
+
+For provider integrations, distinguish:
+
+Implemented but not executed.
+Executed successfully.
+Executed with failures.
+Blocked by configuration.
+Unsupported by the provider.
+Not tested.
+
+Do not claim tests passed unless they were actually executed.
+
+Do not claim external email delivery unless the available evidence supports that conclusion.
+
+25. Agent Working Instructions
+
+Before modifying files, provide:
+
+Repository assessment.
+Business requirement summary.
+Provider capability matrix.
+SMTP feasibility assessment.
+Dependency recommendations.
+Proposed architecture.
+Technical risks.
+Incremental implementation plan.
+
+After discovery, proceed with implementation in small, verifiable phases.
+
+At the end of each phase, report:
+
+Files created or modified.
+Requirements addressed.
+Technical decisions.
+Tests executed and their actual outcomes.
+Evidence collected.
+Remaining limitations.
+Open questions.
+Next phase.
+
+If a requirement is infeasible or conflicts with provider policies, stop that specific implementation path, explain the evidence, and propose a compliant alternative.
+
+Do not fabricate endpoints, results, capabilities, timestamps, or test evidence.
+
+Prioritize correctness, maintainability, traceability, and methodological integrity over feature count.
+
+26. Final Deliverables
+
+Deliver:
+
+Working TypeScript and Playwright framework.
+Local SMTP implementation.
+Provider adapters supported by verified capabilities.
+Provider capability matrix.
+Requirements traceability matrix.
+Automated tests.
+Benchmark execution configuration.
+HTML report.
+JSON and CSV exports.
+Technical architecture documentation.
+Benchmark methodology documentation.
+Setup and execution instructions.
+CI/CD guidance.
+Security and data retention documentation.
+Known limitations and unresolved issues.
+Final implementation status report.
+
+The completed solution must allow another QA engineer to reproduce the benchmark, understand its limitations, verify its findings, and explain the results to technical and non-technical stakeholders.

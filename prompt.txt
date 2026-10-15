@@ -1,0 +1,457 @@
+Email Provider Benchmark Framework
+Prompt 1: Business Analysis, Requirements Engineering & Benchmark Strategy
+1. Role
+
+Act as a Senior Business Analyst, QA Manager, QA Architect, and Test Strategy Consultant specializing in email systems, software quality, benchmarking, and data-driven technical decision-making.
+
+Your task is to define the business requirements and evaluation methodology for an Email Provider Benchmark Framework.
+
+
+2. Business Context
+
+We need to evaluate temporary email receiving providers to determine which solutions are most suitable for automated testing and QA activities.
+
+The providers under evaluation are:
+
+10 Minute Mail
+Maildrop
+Guerrilla Mail
+Mailinator
+YOPmail
+
+The benchmark will use Playwright and TypeScript in the eventual implementation.
+
+A locally managed SMTP server will generate and send synthetic email messages. The framework will then observe the messages through the providers' UI and, where officially supported and authorized, their APIs.
+
+The objective is to assess the receiving experience and the practical suitability of each provider for automated testing.
+
+The evaluation must support technical decisions by a QA Manager and provide evidence that can be reviewed by engineering teams, QA leadership, and other stakeholders.
+
+3. Primary Business Questions
+
+Define a benchmark strategy that answers the following questions:
+
+Which provider offers the highest message detection reliability?
+Which provider offers the lowest observed message detection latency?
+Which provider makes message content available most quickly?
+Which provider offers the most reliable UI automation experience?
+Which provider offers the most reliable API-based access, when available?
+Which provider has the lowest operational complexity for QA automation?
+Which providers have the most restrictive access, retention, or usage policies?
+Which providers offer sufficient capabilities for our testing requirements?
+How consistent are the results across multiple executions and time windows?
+What limitations prevent a fair comparison between providers?
+Which provider is the best fit for UI-based email verification?
+Which provider is the best fit for API-based email verification?
+Which provider offers the best overall balance of reliability, speed, maintainability, and cost?
+
+Do not assume that a single provider must win every category.
+
+4. Scope and Boundaries
+
+Define the business scope around the following activities:
+
+Generating synthetic email messages.
+Sending messages through a local SMTP server.
+Observing message arrival through provider UIs.
+Observing message arrival through documented and authorized APIs.
+Reading message subjects and bodies.
+Validating message content against expected values.
+Measuring observed latency.
+Measuring success, failure, and timeout rates.
+Evaluating automation stability.
+Producing benchmark reports and evidence.
+Comparing providers using a documented methodology.
+
+Explicitly exclude:
+
+Implementing a production email delivery platform.
+Building a public-facing SMTP service.
+Bypassing provider security controls.
+Using undocumented private APIs by default.
+Circumventing CAPTCHA or access restrictions.
+Treating unsupported API functionality as a provider delivery failure.
+Making unsupported claims about the exact time a message reaches a provider's internal infrastructure.
+
+The local SMTP server is the sending mechanism and a source of measurement timestamps. Acceptance by the local SMTP server does not establish successful delivery to the external provider.
+
+5. Provider Evaluation and Capability Matrix
+
+Define a provider assessment matrix covering:
+
+UI availability.
+Authorized UI automation.
+Official API availability.
+API authentication requirements.
+API subscription or licensing requirements.
+Programmatic inbox creation or retrieval.
+Subject availability.
+Plain-text body availability.
+HTML body availability.
+Message metadata availability.
+Message retention.
+Address expiration behavior.
+Request limits.
+Automation restrictions.
+Terms of service.
+Operational complexity.
+Known limitations.
+Evidence source and verification date.
+
+Use these capability states:
+
+SUPPORTED
+NOT_SUPPORTED
+CONFIGURATION_REQUIRED
+TEMPORARILY_UNAVAILABLE
+BLOCKEDBYPROVIDER
+NOT_TESTED
+
+Explain when each state should be used.
+
+Do not assume that all providers expose equivalent functionality.
+
+Do not invent provider capabilities. If current information is unavailable, identify the question as requiring verification.
+
+Distinguish documented capabilities from experimentally observed behavior.
+
+6. Benchmark Dimensions
+
+Define a measurable evaluation model for the following dimensions.
+
+A. Reliability
+Message detection rate.
+Content availability rate.
+Content validation pass rate.
+Timeout rate.
+Duplicate message rate.
+Wrong-message identification rate.
+Successful execution rate.
+Stability across repeated executions.
+B. Performance
+UI message detection latency.
+UI content availability latency.
+API message detection latency.
+API content availability latency.
+API request response time.
+Time required to open and read a message.
+Variability in latency.
+
+Do not combine API response time and message detection latency into one metric.
+
+C. Automation Maintainability
+UI selector stability.
+UI workflow complexity.
+Authentication complexity.
+API integration complexity.
+Frequency of required maintenance.
+Error diagnosability.
+Test execution reproducibility.
+D. Operational Suitability
+Cost and plan requirements.
+Address lifetime.
+Retention limitations.
+Rate limits.
+Restrictions on automated testing.
+Suitability for local execution.
+Suitability for CI/CD.
+Availability of authorized programmatic access.
+E. Content Validation
+Subject accuracy.
+Plain-text body accuracy.
+HTML content accuracy.
+UTF-8 handling.
+Correlation identifier availability.
+Message identification reliability.
+Availability of metadata required for auditing.
+
+For each dimension, define the business rationale, measurable indicators, data source, and limitations.
+
+7. Measurement Methodology
+
+Define the following timestamp concepts:
+
+SMTPACCEPTEDAT: The local SMTP server accepted the message for processing.
+UIFIRSTDETECTED_AT: The message was first detected through the UI.
+UICONTENTAVAILABLE_AT: The required subject and body became accessible through the UI.
+APIFIRSTDETECTED_AT: The message was first identified through the API.
+APICONTENTAVAILABLE_AT: The required content became accessible through the API.
+
+Define these derived metrics:
+
+UI detection latency = UIFIRSTDETECTEDAT minus SMTPACCEPTED_AT.
+UI content latency = UICONTENTAVAILABLEAT minus SMTPACCEPTED_AT.
+API detection latency = APIFIRSTDETECTEDAT minus SMTPACCEPTED_AT.
+API content latency = APICONTENTAVAILABLEAT minus SMTPACCEPTED_AT.
+UI content access duration = UICONTENTAVAILABLEAT minus UIFIRSTDETECTEDAT.
+API content access duration = APICONTENTAVAILABLEAT minus APIFIRSTDETECTEDAT.
+
+Explain that these measurements represent observed latency from local SMTP acceptance, not the provider's exact internal delivery time.
+
+Account for:
+
+Polling intervals.
+Request durations.
+Clock precision.
+Timeouts.
+Network delays.
+Provider-specific behavior.
+Differences between UI and API.
+Differences in access and caching behavior.
+
+Define a fair comparison methodology and identify circumstances where direct comparisons would be misleading.
+
+8. Statistical Methodology
+
+Recommend a statistically defensible approach for repeated benchmark runs.
+
+Include:
+
+Number of samples.
+Number of independent runs.
+Execution windows.
+Polling intervals.
+Timeouts.
+Concurrency.
+Execution order.
+Retry policies.
+Inclusion and exclusion criteria.
+Treatment of failed SMTP attempts.
+Treatment of timeouts and missing observations.
+Sample-size limitations.
+Confidence intervals where appropriate.
+
+Define how to report:
+
+Mean.
+Median.
+P90.
+P95.
+P99 when the sample size is sufficient.
+Detection rate.
+Content validation pass rate.
+Timeout rate.
+Failure category distribution.
+Variability across runs.
+
+Specify the denominator for each percentage.
+
+Do not silently exclude failed or timed-out samples.
+
+Explain why successful-sample latency alone can produce misleading rankings when a provider has a high failure rate.
+
+Do not recommend declaring a winner based on a single run or statistically insignificant differences.
+
+9. UI and API Comparison Strategy
+
+Define separate evaluation paths for UI and API.
+
+UI evaluation should assess:
+
+Inbox access.
+Message detection.
+Message opening.
+Subject extraction.
+Body extraction.
+Content validation.
+UI automation stability.
+
+API evaluation should assess:
+
+API availability.
+Authentication.
+Inbox queries.
+Message identification.
+Content retrieval.
+Response time.
+Rate limiting.
+Error handling.
+Content validation.
+
+Define how to handle providers that support UI access but do not offer an authorized API.
+
+Recommend independent equivalent samples for UI and API whenever practical, to avoid caching or observation-order effects.
+
+Do not compare raw HTTP response time directly against end-to-end UI detection latency.
+
+10. Business Rules and Failure Classification
+
+Define business-level failure categories, including:
+
+SMTPSENDFAILED
+MESSAGENOTDETECTED
+MESSAGECONTENTUNAVAILABLE
+SUBJECT_MISMATCH
+BODY_MISMATCH
+ENCODING_MISMATCH
+WRONGMESSAGEMATCHED
+UIAUTOMATIONFAILED
+APIREQUESTFAILED
+PROVIDERRATELIMITED
+PROVIDER_UNAVAILABLE
+CONFIGURATION_ERROR
+TESTINFRASTRUCTUREERROR
+
+Explain how to distinguish:
+
+A provider limitation.
+A configuration problem.
+A network or SMTP problem.
+A UI automation defect.
+An API integration defect.
+A genuine message detection failure.
+A content validation failure.
+
+Define how capability status and execution outcome must be reported separately.
+
+11. Reporting Requirements
+
+Specify two reporting audiences.
+
+Executive report
+
+Must provide:
+
+Business objective.
+Tested providers and capabilities.
+Overall findings.
+Reliability comparison.
+Latency comparison.
+Operational limitations.
+Cost or plan considerations, where verified.
+Confidence and evidence limitations.
+Risks and recommendations.
+Decision rationale.
+Technical report
+
+Must provide:
+
+Sample-level results.
+Timestamps.
+Metric definitions.
+Polling intervals.
+Request durations.
+Failure classifications.
+Timeouts.
+Configuration details.
+Provider capability matrix.
+Evidence and execution metadata.
+Statistical methodology.
+Reproducibility information.
+
+Recommend suitable HTML, JSON, and CSV outputs.
+
+Specify that real, simulated, and unexecuted samples must be clearly distinguished.
+
+12. Security and Responsible Use
+
+Define requirements for:
+
+Synthetic test data.
+Credential management.
+Log sanitization.
+Screenshot and trace retention.
+Public inbox risks.
+Provider terms of service.
+Rate limits.
+Access restrictions.
+Data retention and cleanup.
+
+Do not recommend bypassing provider security controls or using public inboxes for confidential data.
+
+13. Business Requirements and Acceptance Criteria
+
+Produce a requirements catalogue with unique identifiers, for example:
+
+BR-001: Support independent provider evaluation.
+BR-002: Support UI-based message verification.
+BR-003: Support authorized API-based message verification.
+BR-004: Validate subject and body.
+BR-005: Measure observed detection latency.
+BR-006: Measure reliability independently of latency.
+BR-007: Preserve sample-level evidence.
+BR-008: Report unsupported capabilities.
+BR-009: Generate executive and technical reports.
+BR-010: Support reproducible benchmark execution.
+
+Expand and refine this catalogue as necessary.
+
+For each requirement, include:
+
+Requirement ID.
+Description.
+Business rationale.
+Priority.
+Acceptance criteria.
+Measurement or verification method.
+Dependencies.
+Risks.
+Open questions.
+
+Use MoSCoW prioritization: Must Have, Should Have, Could Have, and Won't Have for the initial release.
+
+Distinguish mandatory release requirements from future enhancements.
+
+14. Risk Assessment
+
+Create a risk register covering:
+
+External SMTP delivery restrictions.
+Unsupported APIs.
+Provider terms and automation restrictions.
+Public inbox interference.
+Message expiration.
+Rate limiting.
+UI changes.
+Network variability.
+Inconsistent polling.
+Insufficient sample size.
+Caching effects.
+Misleading statistical comparisons.
+Missing credentials.
+CI/CD environmental differences.
+
+For each risk, document likelihood, impact, mitigation, and residual risk.
+
+15. Required Deliverables
+
+Produce the following business analysis package:
+
+Executive summary.
+Business objectives and scope.
+Stakeholder and decision-maker assumptions.
+Functional requirements.
+Non-functional requirements.
+Provider capability matrix template.
+Benchmark methodology.
+Metrics and formulas catalogue.
+UI/API evaluation strategy.
+Failure taxonomy.
+Statistical analysis strategy.
+Reporting requirements.
+Security and compliance requirements.
+Prioritized acceptance criteria.
+Risk register.
+Open questions and assumptions.
+Definition of Done.
+A technical handoff document for the VS Code implementation agent.
+
+The technical handoff must be specific enough for a coding agent to translate the approved requirements into architecture, implementation tasks, and automated tests.
+
+16. Working Instructions
+
+Do not write implementation code.
+
+Do not claim to have verified provider capabilities unless evidence supports the claim.
+
+If current provider documentation is needed, use official sources and cite them.
+
+Clearly separate confirmed facts, assumptions, recommendations, and unresolved questions.
+
+Avoid arbitrary scoring weights unless you justify them and explain how stakeholders can adjust them.
+
+Do not force a single overall ranking if the evidence supports different winners for different use cases.
+
+If essential business information is missing, ask focused clarification questions. Otherwise, state reasonable assumptions and proceed with a complete first draft.
+
+The final result must be suitable for review and approval by a QA Manager before technical implementation begins.
