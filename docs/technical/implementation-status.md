@@ -10,7 +10,7 @@
 ## 1. Headline
 
 A working TypeScript/Playwright benchmark framework is implemented, type-checked, lint-clean, and
-covered by **140 passing automated tests** (15 files). It produces HTML, JSON and CSV evidence.
+covered by **155 passing automated tests** (15 files). It produces HTML, JSON and CSV evidence.
 
 **Real end-to-end results have now been produced** over a Brevo relay (port 25 is blocked, so the
 relay is essential). Maildrop and Guerrilla Mail were measured on the API channel:
@@ -49,7 +49,10 @@ timeout status and a single failure category with attribution. HTML/CSV regenera
 | Provider | Channel | State |
 |---|---|---|
 | Maildrop | API (GraphQL) | Implemented; **verified live** (4/4 PASS) |
-| Maildrop | **UI (Playwright)** | **Implemented; executed live (3/3 PASS)** |
+| Maildrop | **UI (Playwright)** | **Implemented; executed live (4/4 PASS)** |
+| Mailinator | **UI (Playwright)** | **Implemented; executed — inbound mail rejected by provider** |
+| Guerrilla Mail | **UI (Playwright)** | **Implemented; executed live (4/4 PASS)** — no CAPTCHA |
+| YOPmail | **UI (Playwright)** | **Implemented (opt-in); executed — message delivered but reading blocked by CAPTCHA** |
 | Guerrilla Mail | API (JSON) | Implemented; **verified live** |
 | Mailinator | API (REST v2) | Implemented; `CONFIGURATION_REQUIRED` (no token) |
 | YOPmail | — | No adapter: no official API (`NOT_SUPPORTED`) |
@@ -74,7 +77,7 @@ this report.
 |---|---|---|
 | Typecheck (strict) | `npm run typecheck` | ✅ exit 0 |
 | Lint | `npm run lint` | ✅ exit 0, 0 problems |
-| Tests | `npm test` | ✅ **140 passed / 15 files** |
+| Tests | `npm test` | ✅ **155 passed / 15 files** |
 | Reporting pipeline | `npm run bench -- --samples=1` | ✅ JSON + CSV + HTML written, clean exit |
 | Capability gating | `npm run bench` (all providers) | ✅ Mailinator/YOPmail/10MM skipped with reasons |
 | Report regeneration | `npm run report -- --in=...json` | ✅ HTML + CSV rebuilt from JSON |
@@ -133,7 +136,7 @@ this report.
 |---|---|---|---|
 | ✅ — | Relay operational; egress IP allowlisted; real runs producing data | — | Done |
 | 🟠 1 | Decide on a **Mailinator token** | QA Manager / Procurement | A third API provider in the comparison |
-| 🟠 2 | **Implement Mailinator UI adapter** (documented `SUPPORTED`) | Engineering | Completes the UI comparison |
+| 🔴 2 | **Appeal the Mailinator abuse flag** with `support@manybrain.com` | QA Manager | Unblocks Mailinator measurement |
 | 🟡 4 | Policy decision on **YOPmail automation** | Legal / QA Manager | YOPmail UI channel |
 | 🟡 5 | Run **n ≥ 30 across ≥ 3 windows** | QA Engineering | Defensible segment winners |
 | 🟡 6 | Confirm **CI Node LTS pin** and **retention policy** | Engineering / Security | CI hardening |
@@ -147,7 +150,7 @@ The study is **not** DoD-complete, and this report says so. Against
 
 | Gate | State |
 |---|---|
-| Framework implemented and tested | ✅ 140 tests, typecheck + lint clean |
+| Framework implemented and tested | ✅ 155 tests, typecheck + lint clean |
 | Phase-0 capability verification | ✅ done (documented) |
 | **Real samples collected** | ❌ blocked by port-25 egress |
 | **≥ 3 runs × ≥ 30 samples** | ❌ not possible yet |

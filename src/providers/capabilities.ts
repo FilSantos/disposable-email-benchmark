@@ -103,7 +103,17 @@ export const PROVIDER_CAPABILITIES: readonly ProviderCapabilityEntry[] = [
     domains: ['guerrillamail.com', 'guerrillamail.info', 'sharklasers.com'],
     capabilities: {
       uiAccess: claim('SUPPORTED', 'DOCUMENTED', 'https://www.guerrillamail.com/about'),
-      uiAutomation: claim('NOT_TESTED', 'UNVERIFIED', undefined, 'ToS forbids request flooding; UI automated access not established'),
+      // Verified 2026-10-15: the inbox table (#email_table) and message view
+      // (#display_email) render without any CAPTCHA or bot challenge, and a
+      // relay-delivered message was detected and read end to end. The ToS
+      // prohibits *over-use* ("repeatedly making many requests"), not automation,
+      // so polling is rate-limited to stay within the stated terms.
+      uiAutomation: claim(
+        'SUPPORTED',
+        'OBSERVED',
+        'https://www.guerrillamail.com/tos',
+        'UI automation verified 2026-10-15; no CAPTCHA present. ToS prohibits over-use, so polling is rate-limited.',
+      ),
       officialApi: claim('SUPPORTED', 'DOCUMENTED', 'https://www.guerrillamail.com/GuerrillaMailAPI.html', 'public JSON API v1.0'),
       apiConfiguration: claim('SUPPORTED', 'DOCUMENTED', 'https://www.guerrillamail.com/GuerrillaMailAPI.html', 'no API key; requires ip/agent params and cookie handling'),
       subject: claim('SUPPORTED', 'DOCUMENTED', 'https://www.guerrillamail.com/GuerrillaMailAPI.html'),
@@ -114,7 +124,8 @@ export const PROVIDER_CAPABILITIES: readonly ProviderCapabilityEntry[] = [
     retention: 'emails expire after 60 minutes',
     expiration: 'addresses persist; messages expire',
     requestLimits: 'unpublished ("the API may be rate limited")',
-    automationRestriction: 'ToS explicitly prohibits over-use / repeated requests',
+    automationRestriction:
+      'ToS prohibits over-use ("repeatedly making many requests"), not automation; no CAPTCHA; polling is rate-limited to stay within the stated terms',
     operationalComplexity: 'low (no key, but cookie state required)',
     knownLimitations: ['1-hour retention', 'HTML sanitized', 'no spam folder', 'rate limits unpublished'],
   },
@@ -125,7 +136,17 @@ export const PROVIDER_CAPABILITIES: readonly ProviderCapabilityEntry[] = [
     domains: ['yopmail.com'],
     capabilities: {
       uiAccess: claim('SUPPORTED', 'DOCUMENTED', 'https://yopmail.com/en/'),
-      uiAutomation: claim('NOT_TESTED', 'UNVERIFIED', 'https://yopmail.com/robots.txt', 'robots.txt disallows /*? ; automation stance not contractually established'),
+      // Verified 2026-10-15: the inbox and message frames are automatable and a
+      // test message WAS delivered (counter showed "1 mail"), but YOPmail then
+      // presented a Cloudflare Turnstile challenge ("Please confirm you're human
+      // to continue") that persists across loads. Automation is therefore blocked
+      // by the provider, and we do not defeat the challenge.
+      uiAutomation: claim(
+        'BLOCKED_BY_PROVIDER',
+        'OBSERVED',
+        'https://yopmail.com/en/',
+        'Cloudflare Turnstile human-verification challenge observed 2026-10-15; message delivered but unreadable without defeating the challenge',
+      ),
       officialApi: claim('NOT_SUPPORTED', 'DOCUMENTED', 'https://yopmail.com/en/', 'no official API found in documentation'),
       apiConfiguration: claim('NOT_SUPPORTED', 'DOCUMENTED', 'https://yopmail.com/en/', 'no API to configure'),
       subject: claim('NOT_TESTED', 'UNVERIFIED', 'https://yopmail.com/en/', 'webmail displays messages; programmatic retrieval not verified'),
@@ -136,9 +157,15 @@ export const PROVIDER_CAPABILITIES: readonly ProviderCapabilityEntry[] = [
     retention: '8 days',
     expiration: 'inboxes are never deleted',
     requestLimits: 'unpublished',
-    automationRestriction: 'robots.txt disallows query-string access; no ToS page found',
-    operationalComplexity: 'unknown (UI only)',
-    knownLimitations: ['no documented API', 'inboxes not password protected', 'anti-scrape robots directive'],
+    automationRestriction:
+      'robots.txt disallows query-string access; no accessible ToS text; Cloudflare Turnstile challenge blocks automated reading',
+    operationalComplexity: 'high / blocked for automation',
+    knownLimitations: [
+      'no documented API',
+      'inboxes not password protected',
+      'anti-scrape robots directive',
+      'Cloudflare Turnstile challenge blocks automated inbox reading (observed 2026-10-15)',
+    ],
   },
   {
     id: 'tenminutemail',

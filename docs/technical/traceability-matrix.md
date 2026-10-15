@@ -24,7 +24,7 @@ exists — completion requires an executed test or a dated artefact.
 |---|---|---|
 | Typecheck (strict) | `npm run typecheck` | ✅ pass |
 | Lint | `npm run lint` | ✅ pass (0 problems) |
-| Unit + integration tests | `npm test` | ✅ **140 passed / 15 files** |
+| Unit + integration tests | `npm test` | ✅ **155 passed / 15 files** |
 | Reporting pipeline | `npm run bench -- --providers=maildrop --samples=1` | ✅ JSON + CSV + HTML written |
 | Live adapter probe | `npx tsx scripts/live-probe.ts` | ✅ Maildrop + Guerrilla Mail reachable |
 | External UI E2E | `EBM_E2E=1 npx playwright test` | ✅ passes against live maildrop.cc |
@@ -37,7 +37,7 @@ exists — completion requires an executed test or a dated artefact.
 | ID | Requirement | Component | Verification | Evidence | Status |
 |---|---|---|---|---|---|
 | BR-001 | Independent provider evaluation | `providers/registry.ts`, `benchmark/runner.ts` | `tests/unit/registry.test.ts` | 5 providers registered; per-provider results isolated | `IMPLEMENTED + TESTED` |
-| BR-002 | UI-based message verification | `providers/maildrop/maildrop.ui.ts` | `tests/unit/ui-adapter.test.ts`, `tests/e2e/maildrop-ui.spec.ts`, real run | Live UI run: 3/3 PASS; E2E spec passes | `IMPLEMENTED + TESTED` (Maildrop); `NOT TESTED` (others) |
+| BR-002 | UI-based message verification | `providers/{maildrop,mailinator,guerrillamail,yopmail}/*.ui.ts` | `tests/unit/ui-adapter.test.ts`, `tests/e2e/maildrop-ui.spec.ts`, real runs | Maildrop UI 4/4; **Guerrilla Mail UI 4/4**; Mailinator 0/4 (rejected); YOPmail 0/4 (CAPTCHA) | `IMPLEMENTED + TESTED` (Maildrop, Guerrilla Mail); `IMPLEMENTED` (Mailinator, YOPmail — provider-blocked) |
 | BR-003 | Authorized API-based verification | `providers/{maildrop,guerrillamail,mailinator}/*.api.ts` | `tests/unit/registry.test.ts`, `scripts/live-probe.ts` | Live probe reached Maildrop + Guerrilla Mail | `IMPLEMENTED + TESTED` (adapters verified live; full send-gated run `BLOCKED BY CONFIGURATION`) |
 | BR-004 | Validate subject and body | `validation/validate.ts` | `tests/unit/validate.test.ts` (14 cases) | Strict + normalized modes; encoding/correlation checks | `IMPLEMENTED + TESTED` |
 | BR-005 | Measure observed detection latency | `metrics/metrics.ts` `deriveMetrics` | `tests/unit/reliability.test.ts` | Nulls when undetected; correct values when observed | `IMPLEMENTED + TESTED` |
@@ -87,10 +87,12 @@ exists — completion requires an executed test or a dated artefact.
 |---|---|---|---|
 | **Maildrop** | API | `Executed successfully` (adapter reachability + polling) | `scripts/live-probe.ts` output; `tests/unit/registry.test.ts` |
 | **Maildrop** | API (full send→detect) | `Blocked by configuration` — no SMTP egress | Discovery report §4; MX unreachable on all ports |
-| **Guerrilla Mail** | API | `Executed successfully` | `runs/benchmark-real-final.json`; 4/4 detected + validated |
-| **Mailinator** | API | `Blocked by configuration` — no API token | `tests/unit/registry.test.ts` (no api channel when `token: null`) |
+| **Guerrilla Mail** | API | `Executed successfully` | `runs/benchmark-api-ui-final.json`; 4/4 detected + validated |
+| **Guerrilla Mail** | **UI** | `Executed successfully` | `runs/benchmark-guerrilla-ui.json`; 4/4 detected + validated |
+| **Mailinator** | API | `Blocked by configuration` — no API token | `tests/unit/registry.test.ts` |
+| **Mailinator** | **UI** | `Executed with failures` — provider rejected inbound mail (`500 flagged for abuse`) | Brevo panel soft bounces; inbox empty |
 | **YOPmail** | API | `Unsupported by the provider` | `capabilities.ts` `NOT_SUPPORTED` with source |
-| **YOPmail** | UI | `Not tested` | `uiAutomation: NOT_TESTED` (policy question DQ-5) |
+| **YOPmail** | **UI** | `Unsupported by the provider` (CAPTCHA) | `uiAutomation: BLOCKED_BY_PROVIDER`; delivered message unreadable behind Turnstile |
 | **10 Minute Mail** | UI | `Unsupported by the provider` (blocked) | `BLOCKED_BY_PROVIDER`, observed 403 |
 | **10 Minute Mail** | API | `Unsupported by the provider` | `NOT_SUPPORTED` with source |
 

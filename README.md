@@ -11,7 +11,7 @@ Benchmark framework for evaluating temporary/disposable email receiving provider
 |---|---|
 | Prompt 1 — Business analysis & methodology | ✅ Complete — [package](./docs/business-analysis/00-overview.md) |
 | Prompt 2 — Discovery, feasibility & implementation | ✅ Framework delivered & verified — [status report](./docs/technical/implementation-status.md) |
-| Real benchmark results | ✅ **Real runs complete** — API (Maildrop, Guerrilla Mail) + **UI (Maildrop)** — [results](./docs/technical/benchmark-results.md) |
+| Real benchmark results | ✅ **Consolidated 5-provider × 2-channel results** — Maildrop & Guerrilla Mail measured; Mailinator (abuse flag) and YOPmail (CAPTCHA) provider-blocked — [results](./docs/technical/benchmark-results.md) |
 
 > **Preliminary real results are published** via the Brevo relay on port 587 (port 25 is blocked).
 > n = 4 per provider, so **no winner is declared**. Producing those results exposed six harness
@@ -22,7 +22,7 @@ Benchmark framework for evaluating temporary/disposable email receiving provider
 
 ```bash
 npm ci
-npm run typecheck && npm run lint && npm test   # 140 tests, no credentials, no network
+npm run typecheck && npm run lint && npm test   # 155 tests, no credentials, no network
 npm run capabilities                            # capability matrix with sources
 npm run bench -- --providers=maildrop --samples=1
 npm run report  -- --in=runs/benchmark-<label>.json

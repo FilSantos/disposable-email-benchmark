@@ -59,8 +59,15 @@ describe('capability matrix integrity', () => {
   });
 
   it('lists UI candidates as only providers with SUPPORTED UI automation', () => {
-    // 10 Minute Mail is excluded: BLOCKED_BY_PROVIDER. Guerrilla Mail and YOPmail are NOT_TESTED.
-    expect([...uiCandidates()].sort()).toEqual(['maildrop', 'mailinator']);
+    // 10 Minute Mail is BLOCKED (Cloudflare) and YOPmail is BLOCKED (Turnstile).
+    // Guerrilla Mail's UI was verified automatable on 2026-10-15 (no CAPTCHA).
+    expect([...uiCandidates()].sort()).toEqual(['guerrillamail', 'maildrop', 'mailinator']);
+  });
+
+  it('records YOPmail UI automation as BLOCKED_BY_PROVIDER, not a delivery failure', () => {
+    const yop = getCapabilityEntry('yopmail');
+    expect(yop?.capabilities.uiAutomation.state).toBe('BLOCKED_BY_PROVIDER');
+    expect(yop?.capabilities.uiAutomation.evidence).toBe('OBSERVED');
   });
 });
 

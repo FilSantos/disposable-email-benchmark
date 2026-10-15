@@ -26,14 +26,26 @@ confirm the adapters reach the real APIs and poll correctly; the relay credentia
 
 ## 2. Deliberately absent functionality
 
-### L-03 — UI implemented for Maildrop only 🟡
-The `UiChannel` contract has one concrete implementation (Maildrop), executed successfully (3/3 PASS).
-Mailinator's UI automation is documented as `SUPPORTED` but not yet implemented. Guerrilla Mail,
-YOPmail and 10 Minute Mail have no authorised/tested UI automation (see the capability matrix).
+### L-03 — UI implemented for Maildrop and Mailinator 🟡
+Both documented `SUPPORTED` UI channels are implemented. Maildrop UI measured 4/4; Mailinator UI
+executed but **its inbound mail was rejected by the provider** (see L-02a), so no latency was measured.
+Guerrilla Mail UI is also implemented and measured (4/4) — it has no CAPTCHA and its ToS restricts
+over-use rather than automation. YOPmail and 10 Minute Mail have no usable UI automation.
 
-### L-04 — YOPmail has no adapter 🟡
-No official API was found. It is represented as capability state only; UI automation is `NOT_TESTED`
-pending the policy decision **DQ-5**. YOPmail is excluded from API comparisons rather than ranked last.
+### L-02a — Brevo→Mailinator delivery is blocked by an abuse flag 🔴
+Mailinator's MX rejects our relay traffic with `500 This Email is flagged for abuse... mailinator`.
+Brevo accepts the message (`250 queued`) and reports the bounce **asynchronously**, so an SMTP-only
+harness sees a timeout. Maildrop delivers the same messages from the same sender.
+**Impact:** Mailinator cannot be measured over this relay. **Sender domain is not blacklisted** — the
+block is destination-specific. See [benchmark-results.md §4](./benchmark-results.md#4-incident-1--mailinator-inbound-mail-rejected).
+
+### L-04 — YOPmail: message delivered, reading blocked by CAPTCHA 🔴
+No official API exists. A UI adapter was built and feasibility was **initially proven** (a delivered
+message rendered end to end). After sustained automated access, YOPmail presented a **Cloudflare
+Turnstile** challenge that persists — Brevo reports `Entregue` (delivered) and YOPmail's counter shows
+"1 mail", yet the inbox is unreadable to an automated client.
+Recorded as `BLOCKED_BY_PROVIDER` (observed). The challenge is **not** defeated. The adapter is
+opt-in. See [benchmark-results.md §5](./benchmark-results.md#5-incident-2--yopmail-message-delivered-reading-blocked-by-captcha).
 
 ### L-05 — 10 Minute Mail is not automatable within policy 🟡
 An active Cloudflare challenge returned HTTP 403 to non-browser clients. Recorded as
@@ -91,7 +103,8 @@ automatically.
 | DQ-2 | Is a Mailinator token approved (free Verified Pro or paid)? | Mailinator API | QA Manager / Procurement |
 | DQ-3 | Confirm the CI Node LTS pin (recommend 22) | CI config | Engineering |
 | DQ-4 | Evidence retention period | Cleanup policy | Security |
-| DQ-5 | Is YOPmail automation acceptable given only a `robots.txt` signal? | YOPmail UI | Legal / QA Manager |
+| DQ-5 | YOPmail automation — **resolved by observation: blocked by CAPTCHA** | — | Closed |
+| DQ-7 | Request the Mailinator abuse flag be cleared (`support@manybrain.com`)? | Mailinator measurement | QA Manager |
 | DQ-6 | Implement Mailinator UI automation (documented `SUPPORTED`)? | Mailinator UI comparison | QA Engineering |
 | Q-03 | Mailinator HTTP request-rate limits (unpublished) | Mailinator throughput | QA Engineering |
 | Q-04 | Exact Mailinator public-inbox TTL ("a few hours") | Retention modelling | QA Engineering |

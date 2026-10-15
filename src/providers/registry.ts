@@ -11,9 +11,11 @@ import { PROVIDER_CAPABILITIES } from './capabilities.js';
 import { createMaildropAdapter } from './maildrop/maildrop.api.js';
 import { MaildropUiAdapter } from './maildrop/maildrop.ui.js';
 import { createGuerrillaMailAdapter } from './guerrillamail/guerrillamail.api.js';
+import { GuerrillaMailUiAdapter } from './guerrillamail/guerrillamail.ui.js';
 import { createMailinatorAdapter } from './mailinator/mailinator.api.js';
 import { MailinatorUiAdapter } from './mailinator/mailinator.ui.js';
 import { createYopmailAdapter } from './yopmail/yopmail.status.js';
+import { YopmailUiAdapter } from './yopmail/yopmail.ui.js';
 import { createTenMinuteMailAdapter } from './tenminutemail/tenminutemail.status.js';
 
 export interface RegisteredProvider {
@@ -25,6 +27,12 @@ export interface RegisteredProvider {
 export interface RegistryOptions {
   readonly maildropMailbox?: string;
   readonly mailinatorInbox?: string;
+  readonly yopmailInbox?: string;
+  /**
+   * YOPmail UI is opt-in: feasibility is proven, but automated use is not
+   * contractually confirmed (DQ-5). Default false.
+   */
+  readonly enableYopmailUi?: boolean;
 }
 
 /** Deterministic-per-process mailbox name when the caller does not pin one. */
@@ -51,7 +59,13 @@ export function buildRegistry(
   });
 
   const guerrilla = createGuerrillaMailAdapter();
-  entries.push({ adapter: guerrilla, executableChannels: guerrilla.api ? ['API'] : [] });
+  // UI automation is SUPPORTED (observed): no CAPTCHA, and the ToS restricts
+  // over-use rather than automation. Polling is rate-limited accordingly.
+  const guerrillaUi = new GuerrillaMailUiAdapter();
+  entries.push({
+    adapter: { ...guerrilla, ui: guerrillaUi },
+    executableChannels: guerrilla.api ? ['API', 'UI'] : ['UI'],
+  });
 
   const mailinator = createMailinatorAdapter({ token: config.mailinatorToken });
   // The public inbox UI needs no account or token, so it is executable even when
@@ -65,7 +79,18 @@ export function buildRegistry(
     executableChannels: mailinator.api ? ['API', 'UI'] : ['UI'],
   });
 
-  entries.push({ adapter: createYopmailAdapter(), executableChannels: [] });
+  // YOPmail's UI is technically automatable (verified 2026-10-15: inbox + message
+  // frames render, 8/8 consecutive polls succeeded). It stays OPT-IN because the
+  // policy question (DQ-5) is unresolved: the site publishes no accessible terms
+  // text and its robots.txt disallows query-string URLs for crawlers.
+  const yopmail = createYopmailAdapter();
+  const yopmailUi = new YopmailUiAdapter({
+    inbox: options.yopmailInbox ?? defaultMailbox('yopmail'),
+  });
+  entries.push({
+    adapter: { ...yopmail, ui: yopmailUi },
+    executableChannels: options.enableYopmailUi ? ['UI'] : [],
+  });
   entries.push({ adapter: createTenMinuteMailAdapter(), executableChannels: [] });
 
   return entries;

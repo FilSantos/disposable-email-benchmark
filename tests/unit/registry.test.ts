@@ -14,7 +14,8 @@ describe('registry — capability gating', () => {
 
     // Maildrop exposes both an authorised API and an authorised UI.
     expect(byId['maildrop']?.executableChannels).toEqual(['API', 'UI']);
-    expect(byId['guerrillamail']?.executableChannels).toEqual(['API']);
+    // Guerrilla Mail exposes a documented API and a verified-automatable UI.
+    expect(byId['guerrillamail']?.executableChannels).toEqual(['API', 'UI']);
     // No token → the Mailinator API is CONFIGURATION_REQUIRED, but its public
     // UI needs no account, so the UI channel remains executable.
     expect(byId['mailinator']?.executableChannels).toEqual(['UI']);

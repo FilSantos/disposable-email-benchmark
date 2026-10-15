@@ -46,6 +46,9 @@ async function main(): Promise<void> {
   // same inbox in a browser while it runs.
   const maildropMailbox = arg('maildrop-mailbox');
   const mailinatorInbox = arg('mailinator-inbox');
+  const yopmailInbox = arg('yopmail-inbox');
+  // Opt-in: YOPmail UI automation is feasible but not contractually confirmed.
+  const enableYopmailUi = arg('yopmail-ui') === 'true';
 
   let server: LocalSmtpServer | null = null;
   let activeRegistry: readonly RegisteredProvider[] = [];
@@ -84,6 +87,7 @@ async function main(): Promise<void> {
       transport,
       environment: createEnvironmentMetadata(),
       sendFrom: config.sendFrom,
+      ...(enableYopmailUi ? { enableYopmailUi: true } : {}),
       logger: log,
     });
 
@@ -110,6 +114,7 @@ async function main(): Promise<void> {
       mailboxOverrides: {
         ...(maildropMailbox ? { maildrop: maildropMailbox } : {}),
         ...(mailinatorInbox ? { mailinator: mailinatorInbox } : {}),
+        ...(yopmailInbox ? { yopmail: yopmailInbox } : {}),
       },
     });
     activeRegistry = result.registry;

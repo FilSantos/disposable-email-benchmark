@@ -50,6 +50,8 @@ export interface RunnerOptions {
   readonly sendFrom?: string;
   readonly logger?: Logger;
   readonly samplerDeps?: Partial<SamplerDeps>;
+  /** Opt in to YOPmail UI automation (policy question DQ-5 unresolved). */
+  readonly enableYopmailUi?: boolean;
 }
 
 export function defaultChannelsFor(config: AppConfig): readonly Channel[] {
@@ -80,7 +82,9 @@ export class BenchmarkRunner {
     readonly scenario?: Scenario;
     readonly runId?: string;
   } = {}): RunPlan {
-    const registry = buildRegistry(this.options.config);
+    const registry = buildRegistry(this.options.config, {
+      enableYopmailUi: this.options.enableYopmailUi ?? false,
+    });
     const requested = options.providers ?? registry.map((r) => r.adapter.id);
     const skipped: { provider: string; reason: string }[] = [];
     const executable: string[] = [];
@@ -137,6 +141,11 @@ export class BenchmarkRunner {
       ...(options.mailboxOverrides?.['mailinator']
         ? { mailinatorInbox: options.mailboxOverrides['mailinator'] }
         : {}),
+      ...(options.mailboxOverrides?.['yopmail']
+        ? { yopmailInbox: options.mailboxOverrides['yopmail'] }
+        : {}),
+      // YOPmail UI is only attached when the operator explicitly opts in.
+      enableYopmailUi: this.options.enableYopmailUi ?? false,
     });
     const samples: SampleRecord[] = [];
 
